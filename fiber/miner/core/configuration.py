@@ -4,6 +4,7 @@ from functools import lru_cache
 from typing import TypeVar
 
 import httpx
+import aiohttp
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from dotenv import load_dotenv
@@ -72,4 +73,5 @@ def factory_config() -> Config:
         metagraph=metagraph,
         min_stake_threshold=min_stake_threshold,
         httpx_client=httpx.AsyncClient(),
+        aiohttp_client=aiohttp.ClientSession(),
     )
