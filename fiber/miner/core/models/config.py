@@ -4,7 +4,7 @@ import httpx
 import aiohttp
 from substrateinterface import Keypair
 
-from fiber.chain_interactions.metagraph import Metagraph
+from fiber.chain.metagraph import Metagraph
 from fiber.miner.security import key_management
 
 

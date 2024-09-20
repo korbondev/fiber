@@ -12,6 +12,7 @@ license = "MIT"
 authors = [{ name = "namoray", email = "nuevaamor@proton.me" }]
 dependencies = [
     "substrate-interface==1.7.10",
+    "eth-typing==5.0.0",
     "tenacity==9.0.0",
     "netaddr==1.3.0",
     "colorama==0.4.6",
@@ -34,7 +35,9 @@ packages = ["fiber"]
 include = ["fiber/**/*.py"]
 
 [tool.hatch.build.targets.sdist]
-include = ["/fiber"]
+include = [
+    "fiber",
+]
 
 [tool.pyright]
 include = ["fiber"]
