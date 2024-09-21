@@ -29,6 +29,8 @@ def construct_server_address(
     """
     Currently just supports http4.
     """
+    logger.debug(f"Constructing server address for {node.ip}:{node.port}")
+    quit()
     if "0.0.0.1" in node.ip:
         
         logger.debug(f"Replaced {node.ip} with localhost.")
