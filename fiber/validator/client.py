@@ -30,6 +30,10 @@ def construct_server_address(
     Currently just supports http4.
     """
     if "0.0.0.1" in node.ip:
+        
+        logger.debug(f"Replaced {node.ip} with localhost.")
+        quit()
+
         # CHAIN DOES NOT ALLOW 127.0.0.1 TO BE POSTED. IS THIS
         # A REASONABLE WORKAROUND FOR LOCAL DEV?
         #if replace_with_docker_localhost:
