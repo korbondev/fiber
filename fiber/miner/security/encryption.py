@@ -1,5 +1,5 @@
 import base64
-import json
+import ujson as json
 from typing import Type, TypeVar
 
 from cryptography.hazmat.primitives import hashes

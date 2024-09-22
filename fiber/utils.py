@@ -1,5 +1,5 @@
 import base64
-import json
+import ujson as json
 
 from cryptography.fernet import Fernet
 
