@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 import httpx
+import aiohttp
 from substrateinterface import Keypair
 
 from fiber.chain.metagraph import Metagraph
@@ -14,3 +15,4 @@ class Config:
     metagraph: Metagraph
     min_stake_threshold: float
     httpx_client: httpx.AsyncClient
+    aiohttp_client: aiohttp.ClientSession
