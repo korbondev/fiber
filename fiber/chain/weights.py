@@ -3,11 +3,12 @@ from functools import wraps
 from typing import Any, Callable
 
 from scalecodec import ScaleType
-from scalecodec.types import GenericExtrinsic
 from substrateinterface import Keypair, SubstrateInterface
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from fiber import constants as fcst
+from fiber.chain.chain_utils import format_error_message
+from fiber.chain.interface import get_substrate
 from fiber.logging_utils import get_logger
 
 logger = get_logger(__name__)
@@ -24,12 +25,17 @@ def _query_subtensor(
     block: int | None = None,
     params: int | None = None,
 ) -> ScaleType:
-    return substrate.query(
-        module="SubtensorModule",
-        storage_function=name,
-        params=params,  # type: ignore
-        block_hash=(None if block is None else substrate.get_block_hash(block)),  # type: ignore
-    )
+    try:
+        return substrate.query(
+            module="SubtensorModule",
+            storage_function=name,
+            params=params,  # type: ignore
+            block_hash=(None if block is None else substrate.get_block_hash(block)),  # type: ignore
+        )
+    except Exception:
+        # Should prevent SSL errors
+        substrate = get_substrate(subtensor_address=substrate.url)
+        raise
 
 
 def _get_hyperparameter(
@@ -68,11 +74,7 @@ def _min_interval_to_set_weights(substrate: SubstrateInterface, netuid: int) -> 
 
 
 def _normalize_and_quantize_weights(node_ids: list[int], node_weights: list[float]) -> tuple[list[int], list[int]]:
-    if (
-        len(node_ids) != len(node_weights)
-        or any(uid < 0 for uid in node_ids)
-        or any(weight < 0 for weight in node_weights)
-    ):
+    if len(node_ids) != len(node_weights) or any(uid < 0 for uid in node_ids) or any(weight < 0 for weight in node_weights):
         raise ValueError("Invalid input: length mismatch or negative values")
     if not any(node_weights):
         return [], []
@@ -88,20 +90,7 @@ def _normalize_and_quantize_weights(node_ids: list[int], node_weights: list[floa
     return node_ids_formatted, node_weights_formatted
 
 
-def _format_error_message(error_message: dict | None) -> str:
-    err_type, err_name, err_description = (
-        "UnknownType",
-        "UnknownError",
-        "Unknown Description",
-    )
-    if isinstance(error_message, dict):
-        err_type = error_message.get("type", err_type)
-        err_name = error_message.get("name", err_name)
-        err_description = error_message.get("docs", [err_description])[0]
-    return f"substrate returned `{err_name} ({err_type})` error. Description: `{err_description}`"
-
-
-def log_and_reraise(func: Callable[..., Any]) -> Callable[..., Any]:
+def _log_and_reraise(func: Callable[..., Any]) -> Callable[..., Any]:
     @wraps(func)
     def wrapper(*args, **kwargs):
         try:
@@ -113,42 +102,60 @@ def log_and_reraise(func: Callable[..., Any]) -> Callable[..., Any]:
     return wrapper
 
 
-@retry(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1.5, min=2, max=5),
-    reraise=True,
-)
-@log_and_reraise
-def _send_extrinsic(
-    substrate: SubstrateInterface,
-    extrinsic_to_send: GenericExtrinsic,
-    wait_for_inclusion: bool = False,
-    wait_for_finalization: bool = False,
-) -> tuple[bool, str | None]:
-    
-    ## Context manager here so if we need to reconnect, the retry loop will catch it
-    with substrate as si:
-        response = si.submit_extrinsic(
-            extrinsic_to_send,
-            wait_for_inclusion=wait_for_inclusion,
-            wait_for_finalization=wait_for_finalization,
-        )
-        if not wait_for_finalization and not wait_for_inclusion:
-            return True, "Not waiting for finalization or inclusion."
-        response.process_events()
-
-        if response.is_success:
-            return True, "Successfully set weights."
-
-        return False, _format_error_message(response.error_message)
-
-
-def can_set_weights(substrate: SubstrateInterface, netuid: int, validator_node_id: int) -> bool:
+def _can_set_weights(substrate: SubstrateInterface, netuid: int, validator_node_id: int) -> bool:
     blocks_since_update = _blocks_since_last_update(substrate, netuid, validator_node_id)
     min_interval = _min_interval_to_set_weights(substrate, netuid)
     if min_interval is None:
         return True
     return blocks_since_update is not None and blocks_since_update > min_interval
+
+
+def _send_weights_to_chain(
+    substrate: SubstrateInterface,
+    keypair: Keypair,
+    node_ids: list[int],
+    node_weights: list[float],
+    netuid: int,
+    version_key: int = 0,
+    wait_for_inclusion: bool = False,
+    wait_for_finalization: bool = False,
+) -> tuple[bool, str | None]:
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1.5, min=2, max=5),
+        reraise=True,
+    )
+    @_log_and_reraise
+    def _set_weights():
+        with substrate as si:
+            rpc_call = si.compose_call(
+                call_module="SubtensorModule",
+                call_function="set_weights",
+                call_params={
+                    "dests": node_ids,
+                    "weights": node_weights,
+                    "netuid": netuid,
+                    "version_key": version_key,
+                },
+            )
+            extrinsic_to_send = si.create_signed_extrinsic(call=rpc_call, keypair=keypair, era={"period": 5})
+
+            response = si.submit_extrinsic(
+                extrinsic_to_send,
+                wait_for_inclusion=wait_for_inclusion,
+                wait_for_finalization=wait_for_finalization,
+            )
+
+            if not wait_for_finalization and not wait_for_inclusion:
+                return True, "Not waiting for finalization or inclusion."
+            response.process_events()
+
+            if response.is_success:
+                return True, "Successfully set weights."
+
+            return False, format_error_message(response.error_message)
+
+    return _set_weights()
 
 
 def set_node_weights(
@@ -165,28 +172,13 @@ def set_node_weights(
 ) -> bool:
     node_ids_formatted, node_weights_formatted = _normalize_and_quantize_weights(node_ids, node_weights)
 
-    # Closing first to prevent very commmon SSL errors - SI will automatically reconnect
-    substrate.close()
-
-
-    rpc_call = substrate.compose_call(
-        call_module="SubtensorModule",
-        call_function="set_weights",
-        call_params={
-            "dests": node_ids_formatted,
-            "weights": node_weights_formatted,
-            "netuid": netuid,
-            "version_key": version_key,
-        },
-    )
-    extrinsic_to_send = substrate.create_signed_extrinsic(call=rpc_call, keypair=keypair, era={"period": 5})
+    # Fetch a new substrate object to reset the connection
+    substrate = get_substrate(subtensor_address=substrate.url)
 
     weights_can_be_set = False
     for attempt in range(1, max_attempts + 1):
-        if not can_set_weights(substrate, netuid, validator_node_id):
-            logger.info(
-                logger.info(f"Skipping attempt {attempt}/{max_attempts}. Too soon to set weights. Will wait 30 secs...")
-            )
+        if not _can_set_weights(substrate, netuid, validator_node_id):
+            logger.info(logger.info(f"Skipping attempt {attempt}/{max_attempts}. Too soon to set weights. Will wait 30 secs..."))
             time.sleep(30)
             continue
         else:
@@ -198,12 +190,15 @@ def set_node_weights(
         return False
 
     logger.info("Attempting to set weights...")
-
-    success, error_message = _send_extrinsic(
-        substrate=substrate,
-        extrinsic_to_send=extrinsic_to_send,
-        wait_for_inclusion=wait_for_inclusion,
-        wait_for_finalization=wait_for_finalization,
+    success, error_message = _send_weights_to_chain(
+        substrate,
+        keypair,
+        node_ids_formatted,
+        node_weights_formatted,
+        netuid,
+        version_key,
+        wait_for_inclusion,
+        wait_for_finalization,
     )
 
     if not wait_for_finalization and not wait_for_inclusion:
