@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 from cryptography.fernet import Fernet
 from pydantic import BaseModel
-from chain.models import FSCBaseModel
+from fiber.chain.models import FSCBaseModel
 
 
 @dataclass

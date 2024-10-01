@@ -12,7 +12,7 @@ from pydantic import BaseModel
 
 from fiber.miner.dependencies import blacklist_low_stake, verify_request
 from fiber.miner.security.encryption import decrypt_general_payload
-from chain.models import FSCBaseModel
+from fiber.chain.models import FSCBaseModel
 
 class ExampleSubnetRequest(FSCBaseModel):
     pass
