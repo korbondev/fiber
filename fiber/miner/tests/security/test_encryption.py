@@ -8,6 +8,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
 from fastapi import HTTPException
 from pydantic import BaseModel
+from chain.models import FSCBaseModel
 
 from fiber.miner.core.models.config import Config
 from fiber.miner.core.models.encryption import SymmetricKeyExchange, SymmetricKeyInfo
@@ -17,7 +18,7 @@ from fiber.miner.security.encryption import (
 )
 
 
-class TestModel(BaseModel):
+class TestModel(FSCBaseModel):
     field: str
 
 
