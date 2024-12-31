@@ -5,7 +5,7 @@ it in hotkey: node
 Can then be used to blacklist and verify
 """
 
-import json
+import ujson as json
 import threading
 
 from substrateinterface import SubstrateInterface

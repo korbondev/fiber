@@ -9,9 +9,9 @@ from fastapi.routing import APIRouter
 from pydantic import BaseModel
 
 from fiber.miner.dependencies import blacklist_low_stake, verify_request
+from fiber.chain.models import FSCBaseModel
 
-
-class ExampleSubnetRequest(BaseModel):
+class ExampleSubnetRequest(FSCBaseModel):
     hi: str
 
 

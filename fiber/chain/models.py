@@ -4,7 +4,14 @@ from typing import TypeAlias, TypedDict
 from pydantic import BaseModel
 
 
-class Node(BaseModel):
+from functools import lru_cache
+class FSCBaseModel(BaseModel):
+    @classmethod
+    @lru_cache()
+    def get_schema(cls):
+        return cls.model_json_schema()
+
+class Node(FSCBaseModel):
     hotkey: str
     coldkey: str
     node_id: int
@@ -36,13 +43,13 @@ class CommitmentDataFieldType(Enum):
 CommitmentDataField: TypeAlias = tuple[CommitmentDataFieldType, bytes] | None
 
 
-class CommitmentQuery(BaseModel):
+class CommitmentQuery(FSCBaseModel):
     fields: list[CommitmentDataField]
     block: int
     deposit: int
 
 
-class RawCommitmentQuery(BaseModel):
+class RawCommitmentQuery(FSCBaseModel):
     data: bytes
     block: int
     deposit: int
