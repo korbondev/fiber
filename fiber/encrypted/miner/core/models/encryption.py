@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 
 from cryptography.fernet import Fernet
 from pydantic import BaseModel
+from fiber.chain.models import FSCBaseModel
 
 
 @dataclass
@@ -18,10 +19,10 @@ class SymmetricKeyInfo:
         return datetime.now() > self.expiration_time
 
 
-class SymmetricKeyExchange(BaseModel):
+class SymmetricKeyExchange(FSCBaseModel):
     encrypted_symmetric_key: str
 
 
-class PublicKeyResponse(BaseModel):
+class PublicKeyResponse(FSCBaseModel):
     public_key: str
     timestamp: float

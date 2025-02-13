@@ -9,12 +9,13 @@ from functools import partial
 from fastapi import Depends
 from fastapi.routing import APIRouter
 from pydantic import BaseModel
+from fiber.chain.models import FSCBaseModel
 
 from fiber.encrypted.miner.dependencies import blacklist_low_stake, verify_request
 from fiber.encrypted.miner.security.encryption import decrypt_general_payload
 
 
-class ExampleSubnetRequest(BaseModel):
+class ExampleSubnetRequest(FSCBaseModel):
     pass
 
 

@@ -1,8 +1,9 @@
 from cryptography.fernet import Fernet
 from pydantic import BaseModel
+from fiber.chain.models import FSCBaseModel
 
 
-class NodeWithFernet(BaseModel):
+class NodeWithFernet(FSCBaseModel):
     hotkey: str
     coldkey: str
     node_id: int
