@@ -4,12 +4,14 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fiber"
-version = "2.1.0"
+version = "2.2.0"
 description = "The ultra lightweight network for miner-validator communication"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
-authors = [{ name = "namoray", email = "namoray@rayonlabs.ai" }]
+authors = [
+    { name = "namoray", email = "namoray@rayonlabs.ai" },
+]
 dependencies = [
     "substrate-interface==1.7.10",
     "eth-typing==5.0.0",
@@ -19,18 +21,19 @@ dependencies = [
     "pydantic>2,<=2.9.2",
     "netaddr==1.3.0",
     "bittensor-commit-reveal==0.1.0",
+    "async-substrate-interface>=1.0.0rc14",
+]
+
+[project.optional-dependencies]
+full = [
     "fastapi==0.112.0",
     "uvicorn==0.30.5",
     "cryptography==43.0.0",
     "httpx==0.27.0",
     "aiohttp==3.*",
-    "ujson==5.*"
+    "ujson==5.*",
 ]
-
-[project.optional-dependencies]
-full = []
-chain = [
-] # This is empty because chain dependencies are in the main dependencies
+chain = [] # This is empty because chain dependencies are in the main dependencies
 
 
 [tool.hatch.build.targets.wheel]
@@ -41,10 +44,14 @@ fiber-post-ip = "fiber.scripts.post_ip_to_chain:main"
 
 
 [tool.hatch.build]
-include = ["fiber/**/*.py"]
+include = [
+    "fiber/**/*.py",
+]
 
 [tool.hatch.build.targets.sdist]
-include = ["fiber"]
+include = [
+    "fiber",
+]
 
 [tool.pyright]
 include = ["fiber"]
@@ -65,4 +72,4 @@ ignore = ["E402"]
 
 [lint.isort]
 lines-after-imports = 2
-force-single-line = true
+force-single-line   = true
