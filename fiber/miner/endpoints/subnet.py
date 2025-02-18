@@ -7,11 +7,12 @@ PLEASE IMPLEMENT YOUR OWN :)
 from fastapi import Depends
 from fastapi.routing import APIRouter
 from pydantic import BaseModel
+from fiber.chain.models import FSCBaseModel
 
 from fiber.miner.dependencies import blacklist_low_stake, verify_request
 
 
-class ExampleSubnetRequest(BaseModel):
+class ExampleSubnetRequest(FSCBaseModel):
     hi: str
 
 
