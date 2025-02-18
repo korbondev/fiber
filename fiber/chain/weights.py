@@ -49,13 +49,14 @@ def blocks_since_last_update(substrate: SubstrateInterface, netuid: int, node_id
     substrate, last_updated_value = query_substrate(substrate, "SubtensorModule", "LastUpdate", [netuid], return_value=False)
     
     #updated: int = current_block - last_updated_value[node_id]
+
     # For some reason, ever since dato, last_updated_value is very inconsistent as to
     # whether it is a 64 or you need to use .value
     try:
         updated: int = current_block - last_updated_value[node_id]
     except TypeError:
         updated: int = current_block - last_updated_value[node_id].value
-    
+
     return updated
 
 

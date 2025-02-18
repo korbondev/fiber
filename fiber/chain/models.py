@@ -16,6 +16,8 @@ class Node(FSCBaseModel):
     node_id: int
     incentive: float
     netuid: int
+    alpha_stake: float
+    tao_stake: float
     stake: float
     trust: float
     vtrust: float
