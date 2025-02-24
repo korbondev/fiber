@@ -37,12 +37,14 @@ async def verify_request(
         signer_ss58_address=validator_hotkey,
         signature=signature,
     ):
+        logger.error(f"Invalid signature: {signature} for validator_hotkey: {validator_hotkey}!")
         raise HTTPException(
             status_code=401,
             detail="Oi, invalid signature, you're not who you said you were!",
         )
 
     if miner_hotkey != config.keypair.ss58_address:
+        logger.error(f"Invalid hotkey: {miner_hotkey}!")
         raise HTTPException(
             status_code=401,
             detail="Oi, invalid miner hotkey - that's not me!",
@@ -56,8 +58,9 @@ async def blacklist_low_stake(
 
     node = metagraph.nodes.get(validator_hotkey)
     if not node:
+        logger.error(f"Hotkey not found: {validator_hotkey}!")
         raise HTTPException(status_code=403, detail="Hotkey not found in metagraph")
 
     if node.stake < config.min_stake_threshold:
-        logger.debug(f"Node {validator_hotkey} has insufficient stake of {node.stake} - minimum is {config.min_stake_threshold}")
+        logger.error(f"Node {validator_hotkey} has insufficient stake of {node.stake} - minimum is {config.min_stake_threshold}")
         raise HTTPException(status_code=403, detail=f"Insufficient stake of {node.stake} ")
