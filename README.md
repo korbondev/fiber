@@ -7,6 +7,11 @@ Fiber is designed to be a highly secure networking framework that utilizes Multi
 
 ## Installation
 
+### Install Full fiber locally
+```bash
+pip install -e .[full]
+```
+
 ### Install Full fiber - with all networking + chain stuff
 ----
 ```bash

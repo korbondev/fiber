@@ -9,7 +9,7 @@ from fastapi.routing import APIRouter
 from pydantic import BaseModel
 from fiber.chain.models import FSCBaseModel
 
-from fiber.miner.dependencies import blacklist_low_stake, verify_request
+from fiber.miner.dependencies import blacklist_low_stake, verify_get_request, verify_request
 
 
 class ExampleSubnetRequest(FSCBaseModel):
@@ -18,6 +18,9 @@ class ExampleSubnetRequest(FSCBaseModel):
 
 async def example_subnet_request(example_body: ExampleSubnetRequest):
     return {"status": "Example request received"}
+
+async def example_subnet_get():
+    return {"status": "Example get request received"}
 
 
 def factory_router() -> APIRouter:
@@ -28,5 +31,12 @@ def factory_router() -> APIRouter:
         tags=["Example"],
         dependencies=[Depends(blacklist_low_stake), Depends(verify_request)],
         methods=["POST"],
+    )
+    router.add_api_route(
+        "/example-subnet-get",
+        example_subnet_get,
+        tags=["Example"],
+        methods=["GET"],
+        dependencies=[Depends(blacklist_low_stake), Depends(verify_get_request)],
     )
     return router

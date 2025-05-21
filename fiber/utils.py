@@ -12,4 +12,6 @@ def fernet_to_symmetric_key(fernet: Fernet) -> str:
 
 
 def construct_header_signing_message(nonce: str, miner_hotkey: str, payload_hash: str) -> str:
+    if payload_hash is None:
+        return f"{nonce}:{miner_hotkey}"
     return f"{nonce}:{miner_hotkey}:{payload_hash}"
