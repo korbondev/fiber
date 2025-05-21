@@ -58,7 +58,7 @@ async def verify_request(
     config: Config = Depends(get_config),
 ):
     if not config.nonce_manager.nonce_is_valid(nonce):
-        logger.error("Nonce is not valid!")
+        logger.debug("Nonce is not valid!")
         raise HTTPException(
             status_code=401,
             detail="Oi, that nonce is not valid!",
@@ -66,13 +66,14 @@ async def verify_request(
 
     body = await request.body()  # Will this cause issues when it comes to getting the body?
     payload_hash = signatures.get_hash(body)
-    message = utils.construct_header_signing_message(nonce=nonce, miner_hotkey=miner_hotkey, payload_hash=payload_hash)
+    message = utils.construct_header_signing_message(
+        nonce=nonce, miner_hotkey=miner_hotkey, payload_hash=payload_hash
+    )
     if not signatures.verify_signature(
         message=message,
         signer_ss58_address=validator_hotkey,
         signature=signature,
     ):
-        logger.error(f"Invalid signature: {signature} for validator_hotkey: {validator_hotkey}!")
         raise HTTPException(
             status_code=401,
             detail="Oi, invalid signature, you're not who you said you were!",
@@ -93,9 +94,8 @@ async def blacklist_low_stake(
 
     node = metagraph.nodes.get(validator_hotkey)
     if not node:
-        logger.error(f"Hotkey not found: {validator_hotkey}!")
         raise HTTPException(status_code=403, detail="Hotkey not found in metagraph")
 
     if node.stake < config.min_stake_threshold:
-        logger.error(f"Node {validator_hotkey} has insufficient stake of {node.stake} - minimum is {config.min_stake_threshold}")
+        logger.debug(f"Node {validator_hotkey} has insufficient stake of {node.stake} - minimum is {config.min_stake_threshold}")
         raise HTTPException(status_code=403, detail=f"Insufficient stake of {node.stake} ")

@@ -47,7 +47,7 @@ def _normalize_and_quantize_weights(node_ids: list[int], node_weights: list[floa
 def blocks_since_last_update(substrate: SubstrateInterface, netuid: int, node_id: int) -> int:
     substrate, current_block = query_substrate(substrate, "System", "Number", [], return_value=True)
     substrate, last_updated_value = query_substrate(substrate, "SubtensorModule", "LastUpdate", [netuid], return_value=False)
-    
+
     #updated: int = current_block - last_updated_value[node_id]
 
     # For some reason, ever since dato, last_updated_value is very inconsistent as to
@@ -56,7 +56,7 @@ def blocks_since_last_update(substrate: SubstrateInterface, netuid: int, node_id
         updated: int = current_block - last_updated_value[node_id]
     except TypeError:
         updated: int = current_block - last_updated_value[node_id].value
-
+        
     return updated
 
 

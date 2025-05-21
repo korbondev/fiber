@@ -1,5 +1,4 @@
 from cryptography.fernet import Fernet
-from pydantic import BaseModel
 from fiber.chain.models import FSCBaseModel
 
 

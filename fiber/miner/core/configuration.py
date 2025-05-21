@@ -3,7 +3,6 @@ from functools import lru_cache
 from typing import TypeVar
 
 import httpx
-import aiohttp
 from dotenv import load_dotenv
 from pydantic import BaseModel
 
@@ -50,5 +49,4 @@ def factory_config() -> Config:
         metagraph=metagraph,
         min_stake_threshold=min_stake_threshold,
         httpx_client=httpx.AsyncClient(),
-        aiohttp_client=aiohttp.ClientSession(),
     )
