@@ -15,7 +15,7 @@ class NonceManager:
         self._nonces[nonce] = time.time() + self.TTL
 
     def nonce_is_valid(self, nonce: str) -> bool:
-        logger.error(f"Checking if nonce is valid: {nonce}")
+        logger.debug(f"Checking if nonce is valid: {nonce}")
         # Check for collision
         if nonce in self._nonces:
             logger.error(f"Invalid nonce because it's a collision: {nonce}")
