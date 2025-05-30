@@ -10,8 +10,8 @@ from fastapi import HTTPException
 from fiber.chain.models import FSCBaseModel
 
 from fiber.miner.core.models.config import Config
-from fiber.miner.core.models.encryption import SymmetricKeyExchange, SymmetricKeyInfo
-from fiber.miner.security.encryption import (
+from fiber.encrypted.miner.core.models.encryption import SymmetricKeyExchange, SymmetricKeyInfo
+from fiber.encrypted.miner.security.encryption import (
     decrypt_general_payload,
     decrypt_symmetric_key_exchange_payload,
 )
