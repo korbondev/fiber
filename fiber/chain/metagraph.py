@@ -50,15 +50,15 @@ class Metagraph:
         # Don't move into the while loop, lest we sync after
         # a stop event
         if self.is_in_sync:
-            logger.info("Metagraph is in sync, waiting 5 mins... 💤")
-            self.stop_event.wait(60 * 5)
+            logger.info("Metagraph is in sync, waiting 15 mins... 💤")
+            self.stop_event.wait(60 * 15)
 
         while not self.stop_event.is_set():
             self.sync_nodes()
             self.is_in_sync = True
             if self.is_in_sync:
-                logger.info("Metagraph is in sync, waiting 5 mins... 💤")
-                self.stop_event.wait(60 * 5)
+                logger.info("Metagraph is in sync, waiting 15 mins... 💤")
+                self.stop_event.wait(60 * 15)
 
     def sync_nodes(self) -> None:
         logger.info("Syncing nodes...")
