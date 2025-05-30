@@ -23,7 +23,7 @@ async def verify_get_request(
     config: Config = Depends(get_config),
 ):
     if not config.encryption_keys_handler.nonce_manager.nonce_is_valid(nonce):
-        logger.debug("Nonce is not valid!")
+        logger.error("Nonce is not valid!")
         raise HTTPException(
             status_code=401,
             detail="Oi, that nonce is not valid!",

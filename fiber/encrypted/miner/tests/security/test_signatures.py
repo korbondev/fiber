@@ -30,7 +30,7 @@ class TestSignatureVerification(unittest.TestCase):
         self.keypair = Keypair.create_from_mnemonic(self.mnemonic)
         self.message = "Test message"
         self.ss58_address = self.keypair.ss58_address
-        logger.debug(f"SS58 address: {self.ss58_address}")
+        logger.error(f"SS58 address: {self.ss58_address}")
 
     def test_sign_and_verify(self):
         signature = sign_message(self.keypair, self.message)

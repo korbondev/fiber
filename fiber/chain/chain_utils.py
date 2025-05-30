@@ -79,7 +79,7 @@ def query_substrate(
 
         return substrate, return_val
     except Exception as e:
-        logger.debug(f"Substrate query failed with error: {e}. Reconnecting and retrying.")
+        logger.error(f"Substrate query failed with error: {e}. Reconnecting and retrying.")
 
         substrate = SubstrateInterface(url=substrate.url)
 

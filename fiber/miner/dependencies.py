@@ -22,7 +22,7 @@ async def verify_get_request(
     config: Config = Depends(get_config),
 ):
     if not config.nonce_manager.nonce_is_valid(nonce):
-        logger.debug("Nonce is not valid!")
+        logger.error("Nonce is not valid!")
         raise HTTPException(
             status_code=401,
             detail="Oi, that nonce is not valid!",
@@ -42,7 +42,7 @@ async def verify_get_request(
         )
 
     if miner_hotkey != config.keypair.ss58_address:
-        logger.debug(f"Miner hotkey {miner_hotkey} does not match config.keypair.ss58_address {config.keypair.ss58_address}")
+        logger.error(f"Miner hotkey {miner_hotkey} does not match config.keypair.ss58_address {config.keypair.ss58_address}")
         raise HTTPException(
             status_code=401,
             detail="Oi, invalid miner hotkey - that's not me!",
@@ -58,7 +58,7 @@ async def verify_request(
     config: Config = Depends(get_config),
 ):
     if not config.nonce_manager.nonce_is_valid(nonce):
-        logger.debug("Nonce is not valid!")
+        logger.error("Nonce is not valid!")
         raise HTTPException(
             status_code=401,
             detail="Oi, that nonce is not valid!",
@@ -80,7 +80,7 @@ async def verify_request(
         )
 
     if miner_hotkey != config.keypair.ss58_address:
-        logger.debug(f"Miner hotkey {miner_hotkey} does not match config.keypair.ss58_address {config.keypair.ss58_address}")
+        logger.error(f"Miner hotkey {miner_hotkey} does not match config.keypair.ss58_address {config.keypair.ss58_address}")
         raise HTTPException(
             status_code=401,
             detail="Oi, invalid miner hotkey - that's not me!",
@@ -97,5 +97,5 @@ async def blacklist_low_stake(
         raise HTTPException(status_code=403, detail="Hotkey not found in metagraph")
 
     if node.stake < config.min_stake_threshold:
-        logger.debug(f"Node {validator_hotkey} has insufficient stake of {node.stake} - minimum is {config.min_stake_threshold}")
+        logger.error(f"Node {validator_hotkey} has insufficient stake of {node.stake} - minimum is {config.min_stake_threshold}")
         raise HTTPException(status_code=403, detail=f"Insufficient stake of {node.stake} ")
