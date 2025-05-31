@@ -24,9 +24,9 @@ class NonceManager:
         # If nonce isn't the right format, don't add it to self._nonces to prevent abuse
         # Check for recency
         current_time_ns = time.time_ns()
-        logger.error(f"Current time: {current_time_ns}")
+        logger.debug(f"Current time: {current_time_ns}")
         try:
-            logger.error(f"Nonce: {nonce}")
+            logger.debug(f"Nonce: {nonce}")
             timestamp_ns = int(nonce.split("_")[0])
             if timestamp_ns > 10**20:
                 logger.error(f"Invalid nonce because it's too old: {nonce}")
