@@ -7,6 +7,7 @@ Can then be used to blacklist and verify
 
 import ujson as json
 import threading
+import random
 
 from substrateinterface import SubstrateInterface
 
@@ -46,19 +47,21 @@ class Metagraph:
     def periodically_sync_nodes(self) -> None:
         logger.info("Periodically syncing nodes...")
 
+        random_sleep = random.randint(5, 15) * 60
+
         # This is here in the case of loading nodes initially.
         # Don't move into the while loop, lest we sync after
         # a stop event
         if self.is_in_sync:
             logger.info("Metagraph is in sync, waiting 15 mins... 💤")
-            self.stop_event.wait(60 * 15)
+            self.stop_event.wait(random_sleep)
 
         while not self.stop_event.is_set():
             self.sync_nodes()
             self.is_in_sync = True
             if self.is_in_sync:
                 logger.info("Metagraph is in sync, waiting 15 mins... 💤")
-                self.stop_event.wait(60 * 15)
+                self.stop_event.wait(random_sleep)
 
     def sync_nodes(self) -> None:
         logger.info("Syncing nodes...")
