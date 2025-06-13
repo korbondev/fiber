@@ -1,3 +1,6 @@
+import base64
+import os
+import tempfile
 import unittest
 from datetime import datetime, timedelta
 from unittest.mock import mock_open, patch
@@ -5,11 +8,11 @@ from unittest.mock import mock_open, patch
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives.asymmetric import rsa
 
-from fiber.miner.core import miner_constants as mcst
-from fiber.miner.core.configuration import _derive_key_from_string
-from fiber.miner.core.models.encryption import SymmetricKeyInfo
-from fiber.miner.security.key_management import EncryptionKeysHandler
-from fiber.miner.security.nonce_management import NonceManager
+from fiber.encrypted.miner.core import miner_constants as mcst
+from fiber.encrypted.miner.core.configuration import _derive_key_from_string
+from fiber.encrypted.miner.core.models.encryption import SymmetricKeyInfo
+from fiber.encrypted.miner.security.key_management import EncryptionKeysHandler
+from fiber.encrypted.miner.security.nonce_management import NonceManager
 
 
 class TestKeyHandler(unittest.TestCase):
@@ -17,7 +20,7 @@ class TestKeyHandler(unittest.TestCase):
         self.nonce_manager = NonceManager()
         self.hotkey = "test_hotkey"
         self.storage_encryption_key = _derive_key_from_string(mcst.DEFAULT_ENCRYPTION_STRING)
-        self.encryption_keys_handler = EncryptionKeysHandler(self.nonce_manager, self.storage_encryption_key)
+        self.encryption_keys_handler = EncryptionKeysHandler(self.nonce_manager, self.storage_encryption_key, hotkey=self.hotkey)
 
     def test_init(self):
         self.assertIsInstance(self.encryption_keys_handler.asymmetric_fernet, Fernet)

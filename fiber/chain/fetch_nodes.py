@@ -7,6 +7,7 @@ from fiber.chain import chain_utils as chain_utils
 from fiber.chain import models
 from fiber.chain.interface import get_substrate
 from fiber.chain.models import Node
+from fiber.chain.chain_utils import reconnect_substrate
 from fiber.logging_utils import get_logger
 
 logger = get_logger(__name__)
@@ -61,7 +62,18 @@ def _get_nodes_for_uid(substrate: SubstrateInterface, netuid: int, block: int | 
 
 
 def get_nodes_for_netuid(substrate: SubstrateInterface, netuid: int, block: int | None = None) -> list[models.Node]:
-    # Make a new substrate connection for this. Could I add this to the _get_nodes_for_uid function
-    # and do the try: except: reraise pattern?
-    substrate = get_substrate(subtensor_address=substrate.url)
-    return _get_nodes_for_uid(substrate, netuid, block)
+    # Try to use the existing substrate connection first
+    try:
+        return _get_nodes_for_uid(substrate, netuid, block)
+    except Exception as e:
+        logger.warning(f"Failed to fetch nodes with existing substrate connection: {e}. Creating new connection.")
+        
+        # Use the centralized reconnection utility
+        substrate = reconnect_substrate(substrate, raise_on_failure=False)
+        
+        try:
+            return _get_nodes_for_uid(substrate, netuid, block)
+        except Exception as retry_error:
+            logger.error(f"Failed even after reconnection attempt: {retry_error}")
+            # Re-raise the original error with context
+            raise e from retry_error

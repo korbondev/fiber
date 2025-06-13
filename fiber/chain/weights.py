@@ -8,7 +8,7 @@ from substrateinterface import Keypair
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from fiber import constants as fcst
-from fiber.chain.chain_utils import format_error_message, query_substrate
+from fiber.chain.chain_utils import format_error_message, query_substrate, reconnect_substrate
 from fiber.chain.interface import get_substrate
 from fiber.logging_utils import get_logger
 
@@ -293,8 +293,9 @@ def set_node_weights(
         )
     node_ids_formatted, node_weights_formatted = _normalize_and_quantize_weights(node_ids, node_weights)
 
-    # Fetch a new substrate object to reset the connection
-    substrate = get_substrate(subtensor_address=substrate.url)
+    # Use the centralized reconnection utility to reset the connection
+    # Note: This uses get_substrate internally which already has proper parameters
+    substrate = reconnect_substrate(substrate, raise_on_failure=False)
 
     if not can_set_weights(substrate, netuid, validator_node_id):
         return False
