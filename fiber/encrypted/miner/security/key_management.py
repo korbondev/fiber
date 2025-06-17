@@ -28,6 +28,9 @@ class EncryptionKeysHandler:
         self.save_key = os.getenv("MIGRATE_TO_KEY", storage_encryption_key)
         self.save_fernet = Fernet(self.save_key) if self.save_key != storage_encryption_key else self.asymmetric_fernet
         
+        # Cache whether we're in migration mode
+        self.is_migrating = self.save_key != storage_encryption_key
+        
         self.load_asymmetric_keys()
         self.load_symmetric_keys()
 
@@ -71,20 +74,26 @@ class EncryptionKeysHandler:
             with open(filename, "rb") as f:
                 encrypted_data = f.read()
 
-            # Try loading with current key first
-            try:
-                decrypted_data = self.asymmetric_fernet.decrypt(encrypted_data)
-            except Exception:
-                # If that fails and we have a different save key, try that
-                if self.save_key != os.getenv("STORAGE_ENCRYPTION_KEY", ""):
+            # Optimized loading: try most likely key first
+            decrypted_data = None
+            
+            # If migrating, try migration key first (since new saves use it)
+            if self.is_migrating:
+                try:
+                    decrypted_data = self.save_fernet.decrypt(encrypted_data)
+                except Exception:
+                    # Fall back to original key
                     try:
-                        decrypted_data = self.save_fernet.decrypt(encrypted_data)
-                        logger.info("Loaded keys using migration key")
+                        decrypted_data = self.asymmetric_fernet.decrypt(encrypted_data)
                     except Exception as e:
-                        logger.error(f"Could not load keys: {e}")
+                        logger.error(f"Could not decrypt symmetric keys: {e}")
                         return
-                else:
-                    logger.error("Could not decrypt symmetric keys")
+            else:
+                # Not migrating, just use the single key
+                try:
+                    decrypted_data = self.asymmetric_fernet.decrypt(encrypted_data)
+                except Exception as e:
+                    logger.error(f"Could not decrypt symmetric keys: {e}")
                     return
                     
             loaded_keys: dict[str, dict[str, dict[str, str]]] = json.loads(decrypted_data.decode())
