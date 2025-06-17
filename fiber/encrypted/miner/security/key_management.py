@@ -23,6 +23,11 @@ class EncryptionKeysHandler:
         self.nonce_manager = nonce_manager
         self.asymmetric_fernet = Fernet(storage_encryption_key)
         self.symmetric_keys_fernets: dict[str, dict[str, SymmetricKeyInfo]] = {}
+        
+        # Simple migration: if MIGRATE_TO_KEY env var is set, use it for saving
+        self.save_key = os.getenv("MIGRATE_TO_KEY", storage_encryption_key)
+        self.save_fernet = Fernet(self.save_key) if self.save_key != storage_encryption_key else self.asymmetric_fernet
+        
         self.load_asymmetric_keys()
         self.load_symmetric_keys()
 
@@ -54,7 +59,7 @@ class EncryptionKeysHandler:
             for hotkey, keys in self.symmetric_keys_fernets.items()
         }
         json_data = json.dumps(serializable_keys)
-        encrypted_data = self.asymmetric_fernet.encrypt(json_data.encode())
+        encrypted_data = self.save_fernet.encrypt(json_data.encode())
 
         logger.info(f"Saving {len(serializable_keys)} symmetric keys to {filename}")
         with open(filename, "wb") as file:
@@ -66,7 +71,22 @@ class EncryptionKeysHandler:
             with open(filename, "rb") as f:
                 encrypted_data = f.read()
 
-            decrypted_data = self.asymmetric_fernet.decrypt(encrypted_data)
+            # Try loading with current key first
+            try:
+                decrypted_data = self.asymmetric_fernet.decrypt(encrypted_data)
+            except Exception:
+                # If that fails and we have a different save key, try that
+                if self.save_key != os.getenv("STORAGE_ENCRYPTION_KEY", ""):
+                    try:
+                        decrypted_data = self.save_fernet.decrypt(encrypted_data)
+                        logger.info("Loaded keys using migration key")
+                    except Exception as e:
+                        logger.error(f"Could not load keys: {e}")
+                        return
+                else:
+                    logger.error("Could not decrypt symmetric keys")
+                    return
+                    
             loaded_keys: dict[str, dict[str, dict[str, str]]] = json.loads(decrypted_data.decode())
 
             self.symmetric_keys_fernets = {
