@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fiber"
-version = "2.4.2.2"
+version = "2.4.2.3"
 description = "The ultra lightweight network for miner-validator communication"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -33,6 +33,7 @@ full = [
     "aiohttp==3.*",
     "ujson==5.*",
     "openai==1.65.4",
+    "pillow==10.4.0",
 ]
 chain = [] # This is empty because chain dependencies are in the main dependencies
 
